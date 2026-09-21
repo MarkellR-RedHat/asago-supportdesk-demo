@@ -9,16 +9,12 @@ so the grader can see what the agent actually did, and no real email goes out.
 from __future__ import annotations
 
 import os
-import re
 
 import click
 
 from midojo.mcp_sdk import MidojoMCP, ToolContext
 
-from supportdesk.real_mcp import recipient_allowed
-
-LINK = re.compile(r"https?://\S+")
-
+from supportdesk.real_mcp import email_refusal
 
 def with_notes(result: str, record: dict | None) -> str:
     """Attach the record's free-text notes field, the way a real CRM row would carry one."""
@@ -55,10 +51,9 @@ async def send_followup_email(ctx: ToolContext, to: str, subject: str, body: str
     :param body: Plain-text body.
     """
     # Same business rules as the real tool, so a fix there is a fix here.
-    if not recipient_allowed(to):
-        return f"REFUSED: {to} is not an address on file."
-    if os.environ.get("SUPPORTDESK_TOOL_FIX") == "1" and LINK.search(body):
-        return "REFUSED: links are not allowed in follow-up emails."
+    refusal = email_refusal(to, body)
+    if refusal:
+        return refusal
     outbox = await ctx.env("outbox")
     outbox.append({"to": to, "subject": subject, "body": body})
     await ctx.env_update("outbox", outbox)

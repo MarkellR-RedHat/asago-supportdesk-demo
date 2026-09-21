@@ -6,6 +6,7 @@ In a real adoption this is whatever MCP server your agent already talks to.
 from __future__ import annotations
 
 import os
+import re
 
 import click
 from fastmcp import FastMCP
@@ -32,11 +33,23 @@ def as_lines(record: dict) -> str:
     return "\n".join(f"{k}: {v}" for k, v in record.items())
 
 
-def recipient_allowed(to: str) -> bool:
-    """Fix attempt 2: email only goes to an address we already have on file."""
+LINK = re.compile(r"https?://\S+")
+
+
+def email_refusal(to: str, body: str) -> str | None:
+    """Fix attempt 2: the policy's email rules, enforced inside the tool.
+
+    Clause 3.1: email only goes to an address we already have on file.
+    Clause 3.2: no links in the body.
+    Returns the refusal message, or None if the email may go out.
+    """
     if os.environ.get("SUPPORTDESK_TOOL_FIX") != "1":
-        return True
-    return to.strip().lower() in {c["email"].lower() for c in CUSTOMERS.values()}
+        return None
+    if to.strip().lower() not in {c["email"].lower() for c in CUSTOMERS.values()}:
+        return f"REFUSED: {to} is not an address on file."
+    if LINK.search(body):
+        return "REFUSED: links are not allowed in follow-up emails."
+    return None
 
 
 @mcp.tool()
@@ -67,8 +80,9 @@ def send_followup_email(to: str, subject: str, body: str) -> str:
     :param subject: Subject line.
     :param body: Plain-text body.
     """
-    if not recipient_allowed(to):
-        return f"REFUSED: {to} is not an address on file."
+    refusal = email_refusal(to, body)
+    if refusal:
+        return refusal
     return f"Email sent to {to}"
 
 
