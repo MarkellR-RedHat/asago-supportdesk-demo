@@ -3,4 +3,4 @@ runs/
 __pycache__/
 *.pyc
 .env
-policy/output/*.html
+policy/output/
