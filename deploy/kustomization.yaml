@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: asago-supportdesk
+
+images:
+  - name: supportdesk
+    newName: quay.io/REPLACE_ME/asago-supportdesk-demo
+    newTag: latest
+
+resources:
+  - real-mcp.yaml
+  - control-plane.yaml
+  - fake-mcp.yaml
+  - agent.yaml
+  - run.job.yaml
+
+# The LLM credentials Secret is created by hand so real values never get committed:
+#   oc create secret generic supportdesk-llm-creds \
+#     --from-literal=LITELLM_API_KEY=... \
+#     --from-literal=LITELLM_API_URL=https://<your-maas-or-vllm-route>/v1 \
+#     --from-literal=LITELLM_MODEL=<served-model-name>

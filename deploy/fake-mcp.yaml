@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supportdesk-fake-mcp
+  labels:
+    app.kubernetes.io/part-of: asago-supportdesk
+    app.kubernetes.io/component: fake-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: fake-mcp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: asago-supportdesk
+        app.kubernetes.io/component: fake-mcp
+    spec:
+      containers:
+        - name: fake-mcp
+          image: supportdesk
+          command: ["supportdesk-fake-mcp", "--host", "0.0.0.0", "--port", "8082", "--upstream-url", "http://supportdesk-real-mcp:8081/mcp"]
+          env:
+            - name: MIDOJO_URL
+              value: http://supportdesk-control-plane:8080
+            # Flip these to "1" to deploy the fixes, then delete and re-apply the Job.
+            - name: SUPPORTDESK_TOOL_FIX
+              value: "0"
+          ports:
+            - containerPort: 8082
+          readinessProbe:
+            tcpSocket:
+              port: 8082
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 512Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supportdesk-fake-mcp
+  labels:
+    app.kubernetes.io/part-of: asago-supportdesk
+spec:
+  selector:
+    app.kubernetes.io/component: fake-mcp
+  ports:
+    - port: 8082
+      targetPort: 8082
