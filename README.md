@@ -48,6 +48,8 @@ uv run asago-policy-mapper extract ../asago-supportdesk-demo/policy/support-ai-p
 
 ## On OpenShift
 
+These manifests build with `kubectl kustomize` but have not been applied to a live cluster yet, so expect to adjust them. The results in the blog post came from `run.sh` on a laptop, pointed at a model served on OpenShift.
+
 ```bash
 podman build -t quay.io/<you>/asago-supportdesk-demo:latest -f Containerfile . && podman push quay.io/<you>/asago-supportdesk-demo:latest
 # edit images: in deploy/kustomization.yaml
