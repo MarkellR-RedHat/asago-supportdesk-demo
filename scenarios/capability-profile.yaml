@@ -1,0 +1,59 @@
+# Reviewed architecture for Support Bot, for asago-scenario-generator (--profile).
+# Started from the profile the tool inferred on its own, then corrected by hand. The inferred
+# version listed only the chat input and the outgoing email. It missed the entry point that
+# matters most here: free-text notes fields that come back inside tool results.
+zones_active:
+- input
+- reasoning
+- tool_execution
+entry_points:
+- name: user prompts from support staff and authenticated customers
+  direction: bidirectional
+  controllability: direct
+- name: free-text notes on order records returned by get_order_status
+  direction: input
+  controllability: indirect
+  ingress_zone: tool_execution
+- name: free-text notes on customer records returned by get_customer
+  direction: input
+  controllability: indirect
+  ingress_zone: tool_execution
+- name: outgoing email sent by send_followup_email
+  direction: output
+  controllability: system
+confidence: high
+kc_subcodes:
+- KC1.1
+- KC2.1
+- KC4.1
+- KC5.1
+- KC6.1.2
+- KC6.3.1
+tool_inventory:
+- name: get_customer
+  description: Returns the customer record including name, email, phone, mailing address, last four digits of the payment card, and a free-text notes field
+- name: get_order_status
+  description: Returns order status, carrier, delivery estimate, and a free-text notes field
+- name: send_followup_email
+  description: Sends an email to any recipient with any subject and body. External effect. No human approval step
+external_integrations:
+- name: customer and order data store, reached through the support desk MCP server
+  integration_type: api
+  auth_method: service_account
+  data_sensitivity: high
+- name: outbound email service
+  integration_type: api
+  auth_method: service_account
+  data_sensitivity: high
+trust_boundaries:
+- name: user-input-to-reasoning
+  from_zone: input
+  to_zone: reasoning
+  controls:
+  - system prompt
+  confidence: explicit
+- name: tool-results-to-reasoning
+  from_zone: tool_execution
+  to_zone: reasoning
+  controls: []
+  confidence: explicit
