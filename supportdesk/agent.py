@@ -88,6 +88,8 @@ async def run_agent_loop(prompt: str, llm: OpenAI, model: str, mcp_server_url: s
                             if hasattr(block, "text"):
                                 content += block.text
 
+                        print(f"  Tool result: {content[:200]!r}")
+
                         messages.append(
                             {
                                 "role": "tool",
