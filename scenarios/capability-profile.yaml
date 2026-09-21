@@ -13,11 +13,11 @@ entry_points:
 - name: free-text notes on order records returned by get_order_status
   direction: input
   controllability: indirect
-  ingress_zone: tool_execution
+  ingress_zone: reasoning
 - name: free-text notes on customer records returned by get_customer
   direction: input
   controllability: indirect
-  ingress_zone: tool_execution
+  ingress_zone: reasoning
 - name: outgoing email sent by send_followup_email
   direction: output
   controllability: system
