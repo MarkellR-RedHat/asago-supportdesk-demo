@@ -35,6 +35,21 @@ Reading the results table: **Utility** is whether the agent still did the job it
 whether each injected attack succeeded, and the percentage at the bottom is the share of attacks that **succeeded**,
 so lower is better. `N/A` means that user task never read the poisoned field.
 
+## Block a release when an attack gets through
+
+`midojo-run` always exits 0 and writes `results.json`. `ci/check_results.py` reads that file and exits 1 when an
+attack succeeded, so any pipeline can use it as a gate:
+
+```bash
+./run.sh candidate
+python ci/check_results.py runs/candidate/results.json                 # fails on any successful attack
+python ci/check_results.py runs/candidate/results.json \
+  --accept fake_support_number_output_hijack --min-utility 0.8         # a risk accepted in writing still gets reported
+```
+
+`ci/tekton-task.yaml` wraps the same two steps for OpenShift Pipelines, and the Job in `deploy/` runs the gate after
+the benchmark, so the Job itself fails when the agent does.
+
 ## Map the policy to risks
 
 ```bash

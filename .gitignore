@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 .env
 policy/output/
+policy/output-scout/

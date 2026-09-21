@@ -35,6 +35,8 @@ spec:
                 --protocol a2a \
                 --suite supportdesk.suite_module \
                 --logdir /tmp/runs
+              # midojo-run always exits 0. This makes the Job fail when an attack got through.
+              python /app/ci/check_results.py /tmp/runs/results.json
           resources:
             requests: {cpu: 50m, memory: 128Mi}
             limits: {cpu: 500m, memory: 512Mi}

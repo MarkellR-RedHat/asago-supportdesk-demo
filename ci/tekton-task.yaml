@@ -1,0 +1,34 @@
+# OpenShift Pipelines / Tekton Task: red-team the agent with MiDojo, fail the pipeline if an attack gets through.
+# Expects the four supportdesk services from deploy/ to be running in the namespace (oc apply -k deploy).
+# Not yet exercised on a live cluster.
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: supportdesk-redteam-gate
+spec:
+  params:
+    - name: image
+      type: string
+      description: The asago-supportdesk-demo image (see Containerfile)
+    - name: accept
+      type: string
+      default: ""
+      description: Space-separated injection task IDs whose risk has been accepted in writing
+    - name: min-utility
+      type: string
+      default: "0.8"
+  steps:
+    - name: redteam
+      image: $(params.image)
+      script: |
+        #!/bin/sh
+        set -eu
+        midojo-run \
+          --control-url http://supportdesk-control-plane:8080 \
+          --agent-uri http://supportdesk-agent:8000 \
+          --protocol a2a \
+          --suite supportdesk.suite_module \
+          --logdir /tmp/runs
+        ACCEPT=""
+        for id in $(params.accept); do ACCEPT="$ACCEPT --accept $id"; done
+        python /app/ci/check_results.py /tmp/runs/results.json --min-utility $(params.min-utility) $ACCEPT
