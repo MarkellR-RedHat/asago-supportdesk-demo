@@ -16,7 +16,7 @@ Models-as-a-Service route, or Ollama on a laptop.
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
-git clone https://github.com/MarkellRawls/asago-supportdesk-demo && cd asago-supportdesk-demo
+git clone https://github.com/MarkellR-RedHat/asago-supportdesk-demo && cd asago-supportdesk-demo
 uv sync
 
 export LLM_URL=https://<your-vllm-or-maas-route>/v1
